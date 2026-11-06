@@ -31,12 +31,17 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Health check endpoints
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', message: 'RENESSANS Backend tizimi ishlamoqda' });
+});
+
+app.get('/', (_req, res) => {
+  res.json({ status: 'ok', message: 'Renesens API ishlayapti' });
 });
 
 // Routes
@@ -57,3 +62,5 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 app.listen(config.port, '0.0.0.0', () => {
   console.log(`[RENESSANS Backend] Server 0.0.0.0:${config.port} portida ishga tushdi.`);
 });
+
+export default app;

@@ -1,0 +1,144 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id             Int      @id @default(autoincrement())
+  fullName       String
+  login          String   @unique
+  passwordHash   String
+  role           String // ADMIN | MANAGER | TEACHER
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  teacherProfile Teacher?
+}
+
+model Teacher {
+  id             Int              @id @default(autoincrement())
+  userId         Int              @unique
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  phone          String
+  subject        String
+  groups         Group[]
+  grades         Grade[]
+  attendances    Attendance[]
+  reasonsWritten Attendance[]     @relation("AttendanceReasonTeacher")
+  salaryMode     String?
+  salaryValue    Float?
+  payrolls       TeacherPayroll[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+}
+
+model Student {
+  id          Int          @id @default(autoincrement())
+  fullName    String
+  phone       String
+  parentPhone String
+  birthDate   String
+  monthlyFee  Float        @default(0)
+  groupId     Int?
+  group       Group?       @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  attendances Attendance[]
+  grades      Grade[]
+  payments    Payment[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Group {
+  id          Int              @id @default(autoincrement())
+  name        String
+  teacherId   Int?
+  teacher     Teacher?         @relation(fields: [teacherId], references: [id], onDelete: SetNull)
+  schedule    String // Masalan: "Dush-Chor-Jum 14:00 - 16:00"
+  students    Student[]
+  attendances Attendance[]
+  payrolls    TeacherPayroll[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+model Attendance {
+  id                Int       @id @default(autoincrement())
+  studentId         Int
+  student           Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  groupId           Int
+  group             Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  date              String // YYYY-MM-DD
+  status            String // KELDI | KELMADI | SABABLI
+  reason            String?
+  reasonByTeacherId Int?
+  reasonByTeacher   Teacher?  @relation("AttendanceReasonTeacher", fields: [reasonByTeacherId], references: [id], onDelete: SetNull)
+  reasonAt          DateTime?
+  markedByTeacherId Int?
+  markedByTeacher   Teacher?  @relation(fields: [markedByTeacherId], references: [id], onDelete: SetNull)
+  createdAt         DateTime  @default(now())
+
+  @@unique([studentId, groupId, date])
+}
+
+model Grade {
+  id        Int      @id @default(autoincrement())
+  studentId Int
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  teacherId Int
+  teacher   Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  score     Int
+  comment   String?
+  date      String // YYYY-MM-DD
+  createdAt DateTime @default(now())
+}
+
+model Transaction {
+  id        Int             @id @default(autoincrement())
+  type      String // INCOME | EXPENSE
+  category  String
+  amount    Float
+  date      String // YYYY-MM-DD
+  note      String?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  payroll   TeacherPayroll?
+}
+
+model TeacherPayroll {
+  id                Int         @id @default(autoincrement())
+  groupId           Int
+  group             Group       @relation(fields: [groupId], references: [id], onDelete: Restrict)
+  teacherId         Int
+  teacher           Teacher     @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+  month             String
+  salaryMode        String
+  salaryValue       Float
+  paymentPercentage Float
+  collectedAmount   Float
+  expectedAmount    Float
+  amount            Float
+  transactionId     Int         @unique
+  transaction       Transaction @relation(fields: [transactionId], references: [id], onDelete: Restrict)
+  createdAt         DateTime    @default(now())
+
+  @@unique([groupId, month])
+}
+
+model Payment {
+  id        Int      @id @default(autoincrement())
+  receiptNo String   @unique
+  studentId Int
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  month     String // Masalan: "2026-11"
+  date      String // Masalan: "2026-11-04"
+  amount    Float
+  method    String // "Plastik karta" | "Naqd pul" | "Click / Payme" | "Bank o'tkazmasi"
+  status    String   @default("TO'LANGAN") // "TO'LANGAN" | "KUTILMOQDA" | "BEKOR QILINGAN"
+  note      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

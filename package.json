@@ -16,7 +16,8 @@
     "prisma:migrate:deploy": "prisma migrate deploy",
     "prisma:db:push": "prisma db push",
     "create-users": "node scripts/create-initial-users.js",
-    "reset-and-seed": "node scripts/reset-and-seed.js"
+    "reset-and-seed": "node scripts/reset-and-seed.js",
+    "create-admin": "node scripts/create-admin.js"
   },
   "dependencies": {
     "@prisma/client": "^5.20.0",

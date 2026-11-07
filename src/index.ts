@@ -5,6 +5,8 @@ import authRoutes from './routes/authRoutes';
 import adminRoutes from './routes/adminRoutes';
 import managerRoutes from './routes/managerRoutes';
 import teacherRoutes from './routes/teacherRoutes';
+import { startBotPolling } from './services/botPolling';
+import { startPaymentScheduler } from './services/paymentScheduler';
 
 const app = express();
 app.set('trust proxy', 1);
@@ -61,6 +63,9 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 
 app.listen(config.port, '0.0.0.0', () => {
   console.log(`[RENESSANS Backend] Server 0.0.0.0:${config.port} portida ishga tushdi.`);
+  // Telegram bot va scheduler ishga tushirish
+  startBotPolling();
+  startPaymentScheduler();
 });
 
 export default app;

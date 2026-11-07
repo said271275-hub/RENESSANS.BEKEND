@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import prisma from '../prisma';
+import { notifyAbsentParents } from '../services/telegramService';
 
 export const getDashboardStats = async (req: Request, res: Response) => {
   try {
@@ -507,6 +508,22 @@ export const saveAdminAttendance = async (req: Request, res: Response) => {
         })
       )
     );
+
+    // Kelmagan o'quvchilarning ota-onasiga Telegram xabari
+    const absentRecs = (records as Array<{ studentId: number; status: string }>).filter(
+      r => r.status === 'KELMADI' || r.status === 'SABABLI'
+    );
+    if (absentRecs.length > 0) {
+      const absentIds = absentRecs.map(r => Number(r.studentId));
+      const absentStudents = await prisma.student.findMany({
+        where: { id: { in: absentIds }, parentTelegramChatId: { not: null } },
+        select: { id: true, fullName: true, parentTelegramChatId: true },
+      });
+      if (absentStudents.length > 0) {
+        const statusMap = new Map(absentRecs.map(r => [Number(r.studentId), r.status]));
+        notifyAbsentParents(absentStudents, group.name, String(date), statusMap).catch(console.error);
+      }
+    }
 
     return res.json({
       message: 'Davomat muvaffaqiyatli saqlandi.',

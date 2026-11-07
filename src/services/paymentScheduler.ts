@@ -74,3 +74,4 @@ export function startPaymentScheduler(): void {
 
   console.log('[Scheduler] To\'lov eslatmasi scheduler ishga tushdi (10, 15, 25 sanalar — soat 09:00 Toshkent).');
 }
+

@@ -26,6 +26,63 @@ export async function sendMessage(chatId: string, text: string): Promise<void> {
 }
 
 /**
+ * Telefon raqam so'rash tugmasi bilan xabar yuboradi
+ */
+export async function sendPhoneRequest(chatId: string, text: string): Promise<void> {
+  if (!BOT_TOKEN) return;
+  try {
+    const res = await fetch(`${BASE_URL}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text,
+        parse_mode: 'HTML',
+        reply_markup: {
+          keyboard: [
+            [
+              {
+                text: '📱 Telefon raqamimni yuborish',
+                request_contact: true,
+              },
+            ],
+          ],
+          resize_keyboard: true,
+          one_time_keyboard: true,
+        },
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json() as any;
+      console.error(`[Telegram] Xabar yuborishda xatolik (chatId=${chatId}):`, err.description);
+    }
+  } catch (error) {
+    console.error('[Telegram] Network xatosi:', error);
+  }
+}
+
+/**
+ * Tugmalarni olib tashlash (normal klaviaturaga qaytish)
+ */
+export async function removeKeyboard(chatId: string, text: string): Promise<void> {
+  if (!BOT_TOKEN) return;
+  try {
+    await fetch(`${BASE_URL}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text,
+        parse_mode: 'HTML',
+        reply_markup: { remove_keyboard: true },
+      }),
+    });
+  } catch (error) {
+    console.error('[Telegram] removeKeyboard xatosi:', error);
+  }
+}
+
+/**
  * Yangi bot update larni oladi (long polling)
  */
 export async function getUpdates(offset: number): Promise<any[]> {
@@ -65,3 +122,4 @@ export async function notifyAbsentParents(
     await sendMessage(student.parentTelegramChatId, text);
   }
 }
+

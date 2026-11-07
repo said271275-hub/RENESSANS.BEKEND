@@ -213,6 +213,7 @@ export const getGroupStudentsEvaluation = async (req: AuthenticatedRequest, res:
         fullName: student.fullName,
         phone: student.phone,
         parentPhone: student.parentPhone,
+        parentTelegramChatId: student.parentTelegramChatId ?? null,
         birthDate: student.birthDate,
         studentCode,
         totalScore,
